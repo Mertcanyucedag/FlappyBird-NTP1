@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Flappy Bird Tek Dosya</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Murat Gül">
+    <style>
+        body{
+            margin:0px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: rgb(250, 250, 155);
+        }
+        #game{
+            border: 2px solid black;
+            background: white;
+        }
+        .controls {
+            margin-top: 10px;
+            font-family: sans-serif;
+            text-align: center;
+            color: #222;
+        }
+        .controls p {
+            margin: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    Mert Can Yücedağ NTP 1. hafta ödevi
+
+    
+    <canvas id="game" width="460" height="640"></canvas>
+    <div class="controls">
+        <p><strong>Boşluk</strong> → Kuşun uçması için</p>
+        <p><strong>R</strong> → Oyunu yeniden başlatmak için</p>
+    </div>
+   <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const jumpStrength = -4;
+    const groundH = 50;
+    const pipeW = 60;
+    let pipeX = canvas.width - pipeW - 10;
+    let gapY = 200;
+    const gapH = 140;
+    let pipeSpeed = 1.25;
+    let gameOver = false;
+    let score = 0;
+    let passed = false;
+    let birdY = canvas.height / 2;
+    let birdVy = 0;
+    const gravity = 0.2;
+    const birdImg = new Image();
+    let started = false;
+    birdImg.src = "bird.png";
+
+    function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    function loop() {
+        if (!gameOver && started) {
+            birdVy += gravity;
+            birdY += birdVy;
+
+            if (birdY + 36 > canvas.height - groundH) {
+                birdY = canvas.height - groundH - 36;
+                birdVy = 0;
+                gameOver = true;
+            }
+
+            pipeX -= pipeSpeed;
+            if (pipeX + pipeW < 0) {
+                pipeX = canvas.width + 20;
+                gapY = 100 + Math.floor(Math.random() * 260);
+                passed = false;
+            }
+
+            if (birdY < 0) { birdY = 0; birdVy = 0; }
+
+            if (!passed && pipeX + pipeW < 80) {
+                score += 1;
+                passed = true;
+            }
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('Skor: ' + score, 10, 30);
+
+        if (!gameOver) {
+            const birdX = 80;
+            const birdW = 40, birdH = 40;
+
+            const topPipe = { x: pipeX, y: 0, w: pipeW, h: gapY };
+            const botPipe = { x: pipeX, y: gapY + gapH, w: pipeW, h: canvas.height - groundH - (gapY + gapH) };
+
+            const hitTop = rectsOverlap(birdX, birdY, birdW, birdH, topPipe.x, topPipe.y, topPipe.w, topPipe.h);
+            const hitBot = rectsOverlap(birdX, birdY, birdW, birdH, botPipe.x, botPipe.y, botPipe.w, botPipe.h);
+
+            if (hitTop || hitBot) gameOver = true;
+        }
+
+        ctx.fillStyle="green";
+        ctx.fillRect(pipeX,0,pipeW,gapY);
+        ctx.fillRect(pipeX, gapY + gapH, pipeW, canvas.height - groundH - (gapY + gapH));
+        ctx.drawImage(birdImg, 80, birdY, 36, 36);
+        ctx.fillStyle="saddlebrown";
+        ctx.fillRect(0,canvas.height-groundH,canvas.width,groundH);
+
+        if (gameOver) {
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Kaybettiniz', canvas.width / 2, canvas.height / 2);
+            ctx.font = '16px sans-serif';
+            ctx.fillText('R: Yeniden dene', canvas.width / 2, canvas.height / 2 + 28);
+            ctx.textAlign = 'start';
+        }
+
+        if (!started) {
+            ctx.fillStyle = 'black';
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Başlamak için boşluğa basın.', canvas.width/2, canvas.height/2);
+            ctx.textAlign = 'start';
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    // Kuş resmi yüklendikten sonra oyun döngüsünü başlat
+    birdImg.onload = function() {
+        loop();
+    }
+
+    window.addEventListener("keydown",(e)=>{
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (!started) started = true;
+            else if (!gameOver) birdVy = jumpStrength; 
+        }
+
+        if (e.code === 'KeyR') {
+            birdY = canvas.height / 2;
+            birdVy = 0;
+            pipeX = canvas.width - pipeW - 10;
+            gapY  = 200;
+            gameOver = false;
+            score = 0;
+            passed = false;
+        }
+    });
+</script>
+
+</body>
+</html>
